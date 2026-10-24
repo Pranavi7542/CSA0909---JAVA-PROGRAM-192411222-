@@ -1,0 +1,102 @@
+
+class Vehicle {
+    String registrationNumber;
+    String vehicleType;
+    long entryTime;
+
+    Vehicle(String registrationNumber, String vehicleType,
+            long entryTime) {
+        this.registrationNumber = registrationNumber;
+        this.vehicleType = vehicleType;
+        this.entryTime = entryTime;
+    }
+
+    void displayVehicle() {
+        System.out.println("Registration Number: " + registrationNumber);
+        System.out.println("Vehicle Type: " + vehicleType);
+        System.out.println("Entry Time: " + entryTime);
+    }
+}
+
+class ParkingSlot {
+    int floorNumber;
+    int slotNumber;
+    Vehicle parkedVehicle;
+
+    ParkingSlot(int floorNumber, int slotNumber) {
+        this.floorNumber = floorNumber;
+        this.slotNumber = slotNumber;
+        this.parkedVehicle = null;
+    }
+
+    boolean isFree() {
+        return parkedVehicle == null;
+    }
+
+    boolean parkVehicle(Vehicle vehicle) {
+        if (isFree()) {
+            parkedVehicle = vehicle;
+            return true;
+        }
+
+        return false;
+    }
+
+    void releaseSlot() {
+        parkedVehicle = null;
+    }
+}
+
+class ParkingTicket {
+    static int nextTicketNumber = 1001;
+
+    int ticketNumber;
+    Vehicle vehicle;
+    int floorNumber;
+    int slotNumber;
+
+    ParkingTicket(Vehicle vehicle, int floorNumber, int slotNumber) {
+        this.ticketNumber = nextTicketNumber++;
+        this.vehicle = vehicle;
+        this.floorNumber = floorNumber;
+        this.slotNumber = slotNumber;
+    }
+
+    void displayTicket() {
+        System.out.println("Ticket Number: " + ticketNumber);
+        System.out.println("Vehicle: " + vehicle.registrationNumber);
+        System.out.println("Floor: " + floorNumber);
+        System.out.println("Slot: " + slotNumber);
+    }
+}
+
+public class Task1 {
+    public static void main(String[] args) {
+
+        // Create a vehicle
+        Vehicle v1 = new Vehicle("TN01AB1111", "Car",
+                System.currentTimeMillis());
+
+        // Create a parking slot
+        ParkingSlot slot1 = new ParkingSlot(1, 5);
+
+        // Park the vehicle
+        if (slot1.parkVehicle(v1)) {
+            System.out.println("Vehicle parked successfully.");
+        } else {
+            System.out.println("Parking slot is occupied.");
+        }
+
+        // Issue a parking ticket
+        ParkingTicket ticket =
+                new ParkingTicket(v1, 1, 5);
+
+        // Display vehicle and ticket details
+        v1.displayVehicle();
+        ticket.displayTicket();
+
+        // Release the parking slot
+        slot1.releaseSlot();
+        System.out.println("Parking slot released.");
+    }
+}
