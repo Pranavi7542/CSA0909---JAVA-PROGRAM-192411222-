@@ -1,0 +1,132 @@
+class ParkingSlot {
+    private int floor;
+    private int slotNumber;
+    private boolean occupied;
+
+    public ParkingSlot(int floor, int slotNumber) {
+        setFloor(floor);
+        setSlotNumber(slotNumber);
+        this.occupied = false;
+    }
+
+    public int getFloor() {
+        return floor;
+    }
+
+    public void setFloor(int floor) {
+        if (floor < 1) {
+            throw new IllegalArgumentException("Floor must be 1 or greater.");
+        }
+        this.floor = floor;
+    }
+
+    public int getSlotNumber() {
+        return slotNumber;
+    }
+
+    public void setSlotNumber(int slotNumber) {
+        if (slotNumber < 1) {
+            throw new IllegalArgumentException("Slot number must be 1 or greater.");
+        }
+        this.slotNumber = slotNumber;
+    }
+
+    public boolean isOccupied() {
+        return occupied;
+    }
+
+    public void parkVehicle() {
+        if (occupied) {
+            throw new IllegalStateException("Slot is already occupied.");
+        }
+        occupied = true;
+    }
+
+    public void releaseSlot() {
+        if (!occupied) {
+            throw new IllegalStateException("Slot is already empty.");
+        }
+        occupied = false;
+    }
+
+    public void displaySlot() {
+        System.out.println(
+            "Floor " + floor + ", Slot " + slotNumber
+            + " - " + (occupied ? "Occupied" : "Available")
+        );
+    }
+}
+
+class ParkingTicket {
+    private final int ticketNumber;
+    private String registrationNumber;
+    private int parkingMinutes;
+
+    public ParkingTicket(int ticketNumber, String registrationNumber) {
+        if (ticketNumber <= 0) {
+            throw new IllegalArgumentException("Ticket number must be positive.");
+        }
+
+        this.ticketNumber = ticketNumber;
+        setRegistrationNumber(registrationNumber);
+        setParkingMinutes(0);
+    }
+
+    public int getTicketNumber() {
+        return ticketNumber;
+    }
+
+    public String getRegistrationNumber() {
+        return registrationNumber;
+    }
+
+    public void setRegistrationNumber(String registrationNumber) {
+        if (registrationNumber == null || registrationNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Registration number cannot be empty.");
+        }
+        this.registrationNumber = registrationNumber.trim();
+    }
+
+    public int getParkingMinutes() {
+        return parkingMinutes;
+    }
+
+    public void setParkingMinutes(int parkingMinutes) {
+        if (parkingMinutes < 0) {
+            throw new IllegalArgumentException("Parking duration cannot be negative.");
+        }
+        this.parkingMinutes = parkingMinutes;
+    }
+
+    public void displayTicket() {
+        System.out.println("Ticket: " + ticketNumber);
+        System.out.println("Vehicle: " + registrationNumber);
+        System.out.println("Parking duration: " + parkingMinutes + " minutes");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        ParkingSlot slot = new ParkingSlot(1, 5);
+        slot.parkVehicle();
+        slot.displaySlot();
+
+        ParkingTicket ticket = new ParkingTicket(101, "TN01AB1234");
+        ticket.setParkingMinutes(90);
+        ticket.displayTicket();
+
+        // Integer wrapper class: autoboxing converts int to Integer
+        Integer slotA = 5;
+        Integer slotB = 5;
+
+        // Use equals() to compare Integer values, not ==
+        System.out.println("Slot numbers equal: " + slotA.equals(slotB));
+
+        // Demonstrate validation
+        try {
+            ticket.setParkingMinutes(-10);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid duration rejected.");
+        }
+    }
+}
