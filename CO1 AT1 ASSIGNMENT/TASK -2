@@ -1,0 +1,83 @@
+
+import java.util.Scanner;
+
+public class Main {
+
+    // Jagged array: each floor can have a different number of slots
+    static String[][] slots = {
+        new String[3],  // Floor 1: 3 slots
+        new String[2],  // Floor 2: 2 slots
+        new String[4]   // Floor 3: 4 slots
+    };
+
+    // Find the first free slot and park the vehicle
+    static void parkVehicle(String vehicleNo) {
+        for (int floor = 0; floor < slots.length; floor++) {
+            for (int slot = 0; slot < slots[floor].length; slot++) {
+
+                if (slots[floor][slot] == null) {
+                    slots[floor][slot] = vehicleNo;
+
+                    System.out.println("Vehicle parked successfully!");
+                    System.out.println("Floor: " + (floor + 1));
+                    System.out.println("Slot: " + (slot + 1));
+                    return;
+                }
+            }
+        }
+
+        System.out.println("Parking facility is full!");
+    }
+
+    // Display all floors and their slots
+    static void displaySlots() {
+        System.out.println("\nParking Slot Details:");
+
+        for (int floor = 0; floor < slots.length; floor++) {
+            System.out.println("Floor " + (floor + 1) + ":");
+
+            for (int slot = 0; slot < slots[floor].length; slot++) {
+                if (slots[floor][slot] == null) {
+                    System.out.println("Slot " + (slot + 1) + ": Free");
+                } else {
+                    System.out.println("Slot " + (slot + 1) + ": "
+                            + slots[floor][slot]);
+                }
+            }
+        }
+    }
+
+    // Calculate fee: every started hour is charged in full
+    static int calculateFee(int minutes, int ratePerHour) {
+        if (minutes <= 0) {
+            return 0;
+        }
+
+        // Integer arithmetic: ceiling(minutes / 60)
+        int hours = (minutes + 59) / 60;
+
+        return hours * ratePerHour;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter vehicle registration number: ");
+        String vehicleNo = sc.nextLine();
+
+        parkVehicle(vehicleNo);
+        displaySlots();
+
+        System.out.print("\nEnter parking duration in minutes: ");
+        int minutes = sc.nextInt();
+
+        System.out.print("Enter hourly rate in rupees: ");
+        int rate = sc.nextInt();
+
+        int fee = calculateFee(minutes, rate);
+
+        System.out.println("Parking fee: Rs. " + fee);
+
+        sc.close();
+    }
+}
