@@ -1,0 +1,256 @@
+interface Chargeable {
+    double chargingFee(double kWh);
+}
+
+abstract class Vehicle {
+    private String regNo;
+
+    public Vehicle(String regNo) {
+        this.regNo = regNo;
+    }
+
+    public String getRegNo() {
+        return regNo;
+    }
+
+    abstract double parkingFee(int minutes);
+}
+
+class TwoWheeler extends Vehicle {
+    public TwoWheeler(String regNo) {
+        super(regNo);
+    }
+
+    @Override
+    double parkingFee(int minutes) {
+        int hours = (minutes + 59) / 60; // round up partial hours
+        return hours * 15.0;
+    }
+}
+
+class Car extends Vehicle {
+    public Car(String regNo) {
+        super(regNo);
+    }
+
+    @Override
+    double parkingFee(int minutes) {
+        int hours = (minutes + 59) / 60;
+        return hours * 30.0;
+    }
+}
+
+class ElectricCar extends Car implements Chargeable {
+    public ElectricCar(String regNo) {
+        super(regNo);
+    }
+
+    @Override
+    public double chargingFee(double kWh) {
+        return kWh * 12.0;
+    }
+
+    @Override
+    double parkingFee(int minutes) {
+        return super.parkingFee(minutes) + chargingFee(10);
+    }
+}
+
+class ParkingTicket {
+    private int ticketNumber;
+    private Vehicle vehicle;
+    private int slotNumber;
+
+    public ParkingTicket(int ticketNumber, Vehicle vehicle, int slotNumber) {
+        this.ticketNumber = ticketNumber;
+        this.vehicle = vehicle;
+        this.slotNumber = slotNumber;
+    }
+
+    public int getTicketNumber() {
+        return ticketNumber;
+    }
+
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
+    public int getSlotNumber() {
+        return slotNumber;
+    }
+}
+
+class ParkingFacility {
+    private boolean[] slots;
+    private ParkingTicket[] activeTickets;
+    private int nextTicketNumber = 1001;
+    private double totalCollection = 0;
+
+    public ParkingFacility(int numberOfSlots) {
+        if (numberOfSlots <= 0) {
+            throw new IllegalArgumentException("Facility must have at least one slot.");
+        }
+
+        slots = new boolean[numberOfSlots];
+        activeTickets = new ParkingTicket[numberOfSlots];
+    }
+
+    // Find a free slot, create a ticket and park the vehicle
+    public ParkingTicket parkVehicle(String type, String regNo) {
+        if (regNo == null || regNo.trim().isEmpty()) {
+            System.out.println("Rejected: registration number is empty.");
+            return null;
+        }
+
+        // Reject duplicate registration numbers
+        for (ParkingTicket ticket : activeTickets) {
+            if (ticket != null &&
+                ticket.getVehicle().getRegNo().equalsIgnoreCase(regNo.trim())) {
+                System.out.println("Rejected: duplicate registration " + regNo);
+                return null;
+            }
+        }
+
+        Vehicle vehicle;
+
+        if (type.equalsIgnoreCase("TwoWheeler")) {
+            vehicle = new TwoWheeler(regNo.trim());
+        } else if (type.equalsIgnoreCase("Car")) {
+            vehicle = new Car(regNo.trim());
+        } else if (type.equalsIgnoreCase("ElectricCar")) {
+            vehicle = new ElectricCar(regNo.trim());
+        } else {
+            System.out.println("Rejected: unknown vehicle type " + type);
+            return null;
+        }
+
+        // Allocate the first available slot
+        for (int i = 0; i < slots.length; i++) {
+            if (!slots[i]) {
+                slots[i] = true;
+
+                ParkingTicket ticket =
+                    new ParkingTicket(nextTicketNumber++, vehicle, i + 1);
+
+                activeTickets[i] = ticket;
+
+                System.out.println(
+                    "Parked " + type + " " + regNo
+                    + " in slot " + (i + 1)
+                    + ", ticket " + ticket.getTicketNumber()
+                );
+
+                return ticket;
+            }
+        }
+
+        System.out.println("Rejected: parking facility is full.");
+        return null;
+    }
+
+    // Exit vehicle, calculate fee and release its slot
+    public double exitVehicle(String regNo, int minutes) {
+        if (minutes < 0) {
+            System.out.println("Rejected: parking duration cannot be negative.");
+            return 0;
+        }
+
+        for (int i = 0; i < activeTickets.length; i++) {
+            ParkingTicket ticket = activeTickets[i];
+
+            if (ticket != null &&
+                ticket.getVehicle().getRegNo().equalsIgnoreCase(regNo)) {
+
+                double fee = ticket.getVehicle().parkingFee(minutes);
+
+                // Zero-minute stay is free
+                if (minutes == 0) {
+                    fee = 0;
+                }
+
+                slots[i] = false;
+                activeTickets[i] = null;
+                totalCollection += fee;
+
+                System.out.println(
+                    "Exit " + regNo + ": " + minutes
+                    + " minutes, fee Rs " + fee
+                    + ", released slot " + (i + 1)
+                );
+
+                return fee;
+            }
+        }
+
+        System.out.println("Rejected: vehicle not found " + regNo);
+        return 0;
+    }
+
+    public boolean isValidSlotNumber(int slotNumber) {
+        return slotNumber >= 1 && slotNumber <= slots.length;
+    }
+
+    public boolean releaseSlot(int slotNumber) {
+        if (!isValidSlotNumber(slotNumber)) {
+            System.out.println("Rejected: invalid slot number " + slotNumber);
+            return false;
+        }
+
+        int index = slotNumber - 1;
+
+        if (!slots[index]) {
+            System.out.println("Slot " + slotNumber + " is already empty.");
+            return false;
+        }
+
+        slots[index] = false;
+        activeTickets[index] = null;
+        System.out.println("Released slot " + slotNumber);
+        return true;
+    }
+
+    public double getTotalCollection() {
+        return totalCollection;
+    }
+
+    public void showSlots() {
+        System.out.println("Slot status:");
+        for (int i = 0; i < slots.length; i++) {
+            System.out.println(
+                "Slot " + (i + 1) + ": "
+                + (slots[i] ? "Occupied" : "Available")
+            );
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        // Three slots make it possible to test multiple vehicle categories
+        ParkingFacility facility = new ParkingFacility(3);
+
+        System.out.println("=== NORMAL PARKING ===");
+        facility.parkVehicle("TwoWheeler", "TN01A1");
+        facility.parkVehicle("Car", "TN02B2");
+        facility.parkVehicle("ElectricCar", "TN03C3");
+
+        System.out.println("\n=== INVALID CASES ===");
+        facility.parkVehicle("Bus", "TN04D4");       // unknown type
+        facility.parkVehicle("Car", "TN02B2");       // duplicate registration
+        facility.parkVehicle("Car", "TN05E5");       // facility full
+        facility.releaseSlot(99);                    // invalid slot number
+
+        System.out.println("\n=== EXIT AND FEE TESTS ===");
+        facility.exitVehicle("TN01A1", 0);            // zero-minute stay
+        facility.exitVehicle("TN02B2", 60);           // exact 1-hour boundary
+        facility.exitVehicle("TN03C3", 120);          // 2 hours + EV charging
+
+        System.out.println("\n=== FINAL STATUS ===");
+        facility.showSlots();
+
+        System.out.println(
+            "Total collection for the day: Rs "
+            + facility.getTotalCollection()
+        );
+    }
+}
