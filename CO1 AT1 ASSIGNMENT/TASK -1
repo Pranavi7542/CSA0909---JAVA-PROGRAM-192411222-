@@ -1,0 +1,134 @@
+
+public class Main {
+
+    // Class 1: Vehicle stores vehicle details
+    static class Vehicle {
+        String regNo;
+        String type;
+
+        Vehicle(String regNo, String type) {
+            this.regNo = regNo;
+            this.type = type;
+        }
+    }
+
+    // Class 2: ParkingSlot represents one parking space
+    static class ParkingSlot {
+        int slotNumber;
+        Vehicle parkedVehicle;
+
+        ParkingSlot(int slotNumber) {
+            this.slotNumber = slotNumber;
+            this.parkedVehicle = null;
+        }
+
+        boolean isFree() {
+            return parkedVehicle == null;
+        }
+    }
+
+    // Class 3: ParkingTicket stores parking information
+    static class ParkingTicket {
+        static int ticketCounter = 1000;
+
+        int ticketNumber;
+        Vehicle vehicle;
+        int slotNumber;
+        int entryHour;
+
+        ParkingTicket(Vehicle vehicle, int slotNumber, int entryHour) {
+            ticketCounter++;
+            this.ticketNumber = ticketCounter;
+            this.vehicle = vehicle;
+            this.slotNumber = slotNumber;
+            this.entryHour = entryHour;
+        }
+    }
+
+    // Class 4: ParkingFacility manages parking slots
+    static class ParkingFacility {
+        ParkingSlot[] slots;
+
+        ParkingFacility(int numberOfSlots) {
+            slots = new ParkingSlot[numberOfSlots];
+
+            for (int i = 0; i < numberOfSlots; i++) {
+                slots[i] = new ParkingSlot(i + 1);
+            }
+        }
+
+        // Park a vehicle in the first available slot
+        ParkingTicket parkVehicle(Vehicle vehicle, int entryHour) {
+            for (ParkingSlot slot : slots) {
+                if (slot.isFree()) {
+                    slot.parkedVehicle = vehicle;
+
+                    ParkingTicket ticket = new ParkingTicket(
+                        vehicle, slot.slotNumber, entryHour
+                    );
+
+                    System.out.println("Vehicle parked successfully!");
+                    System.out.println("Registration: " + vehicle.regNo);
+                    System.out.println("Slot number: " + slot.slotNumber);
+                    System.out.println("Ticket number: " + ticket.ticketNumber);
+
+                    return ticket;
+                }
+            }
+
+            System.out.println("Parking is full!");
+            return null;
+        }
+
+        // Remove a vehicle and calculate its parking fee
+        void releaseVehicle(ParkingTicket ticket, int exitHour) {
+            if (ticket == null) {
+                return;
+            }
+
+            int duration = exitHour - ticket.entryHour;
+
+            if (duration < 0) {
+                System.out.println("Invalid exit time!");
+                return;
+            }
+
+            int fee;
+
+            if (ticket.vehicle.type.equalsIgnoreCase("TwoWheeler")) {
+                fee = duration * 10;
+            } else {
+                fee = duration * 30;
+            }
+
+            slots[ticket.slotNumber - 1].parkedVehicle = null;
+
+            System.out.println("\nVehicle exited successfully!");
+            System.out.println("Registration: " + ticket.vehicle.regNo);
+            System.out.println("Parking duration: " + duration + " hour(s)");
+            System.out.println("Parking fee: Rs. " + fee);
+        }
+    }
+
+    // Main method: program execution starts here
+    public static void main(String[] args) {
+
+        ParkingFacility facility = new ParkingFacility(2);
+
+        Vehicle v1 = new Vehicle("TN01AB1111", "TwoWheeler");
+        Vehicle v2 = new Vehicle("TN02CD2222", "Car");
+
+        ParkingTicket t1 = facility.parkVehicle(v1, 9);
+        ParkingTicket t2 = facility.parkVehicle(v2, 10);
+
+        // Try to park a third vehicle
+        Vehicle v3 = new Vehicle("TN03EF3333", "Car");
+        facility.parkVehicle(v3, 11);
+
+        // Release the first vehicle
+        facility.releaseVehicle(t1, 12);
+
+        // Now a slot is free, so the third vehicle can park
+        facility.parkVehicle(v3, 11);
+    }
+}
