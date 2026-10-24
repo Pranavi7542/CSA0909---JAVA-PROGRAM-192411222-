@@ -1,0 +1,94 @@
+interface Chargeable {
+    double chargingFee(double kWh);
+
+    // Default method: common charging-related behaviour
+    default void showChargingMessage() {
+        System.out.println("Vehicle supports charging.");
+    }
+
+    // Static method: utility method belonging to the interface
+    static void showChargingRate() {
+        System.out.println("Charging rate: Rs 12 per kWh");
+    }
+}
+
+abstract class Vehicle {
+    private String regNo;
+
+    Vehicle(String regNo) {
+        this.regNo = regNo;
+    }
+
+    public String getRegNo() {
+        return regNo;
+    }
+
+    // Subclasses must provide their own parking fee calculation
+    abstract double calculateFee(int hours);
+}
+
+class TwoWheeler extends Vehicle {
+    TwoWheeler(String regNo) {
+        super(regNo);
+    }
+
+    @Override
+    double calculateFee(int hours) {
+        return hours * 15.0;
+    }
+}
+
+class Car extends Vehicle {
+    Car(String regNo) {
+        super(regNo);
+    }
+
+    @Override
+    double calculateFee(int hours) {
+        return hours * 30.0;
+    }
+}
+
+class ElectricCar extends Car implements Chargeable {
+    ElectricCar(String regNo) {
+        super(regNo);
+    }
+
+    @Override
+    public double chargingFee(double kWh) {
+        return kWh * 12.0;
+    }
+
+    @Override
+    public double calculateFee(int hours) {
+        // Car parking fee + charging fee for 10 kWh
+        return super.calculateFee(hours) + chargingFee(10);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Vehicle[] vehicles = {
+            new TwoWheeler("TN01A1"),
+            new Car("TN02B2"),
+            new ElectricCar("TN03C3")
+        };
+
+        int parkingHours = 2;
+
+        for (Vehicle v : vehicles) {
+            System.out.println(
+                v.getClass().getSimpleName() + " "
+                + v.getRegNo() + " -> Rs "
+                + v.calculateFee(parkingHours)
+            );
+
+            if (v instanceof Chargeable) {
+                Chargeable c = (Chargeable) v;
+                c.showChargingMessage();
+            }
+        }
+
+        Chargeable.showChargingRate();
+    }
+}
