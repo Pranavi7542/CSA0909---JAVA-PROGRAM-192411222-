@@ -1,0 +1,209 @@
+import java.util.HashMap;
+import java.util.Map;
+
+// Task 12: Campus Smart-Parking System
+public class Main {
+
+    // Abstract vehicle class
+    static abstract class Vehicle {
+        protected String registrationNumber;
+
+        Vehicle(String registrationNumber) {
+            this.registrationNumber = registrationNumber;
+        }
+
+        public String getRegistrationNumber() {
+            return registrationNumber;
+        }
+
+        public abstract double calculateFee(int parkingHours, int entryHour);
+    }
+
+    // E-bike: flat parking fee
+    static class EBike extends Vehicle {
+        EBike(String registrationNumber) {
+            super(registrationNumber);
+        }
+
+        @Override
+        public double calculateFee(int parkingHours, int entryHour) {
+            return 20.0;
+        }
+    }
+
+    // Car: ₹30 per hour
+    static class Car extends Vehicle {
+        Car(String registrationNumber) {
+            super(registrationNumber);
+        }
+
+        @Override
+        public double calculateFee(int parkingHours, int entryHour) {
+            return parkingHours * 30.0;
+        }
+    }
+
+    // Delivery van: double car rate during 9 AM–5 PM
+    static class DeliveryVan extends Vehicle {
+        DeliveryVan(String registrationNumber) {
+            super(registrationNumber);
+        }
+
+        @Override
+        public double calculateFee(int parkingHours, int entryHour) {
+            double rate = (entryHour >= 9 && entryHour < 17) ? 60.0 : 30.0;
+            return parkingHours * rate;
+        }
+    }
+
+    // Visitor vehicle: one-day pass
+    static class Visitor extends Vehicle {
+        Visitor(String registrationNumber) {
+            super(registrationNumber);
+        }
+
+        @Override
+        public double calculateFee(int parkingHours, int entryHour) {
+            return 100.0;
+        }
+    }
+
+    // Stores parking ticket information
+    static class ParkingTicket {
+        Vehicle vehicle;
+        int floor;
+        int slot;
+        int entryHour;
+
+        ParkingTicket(Vehicle vehicle, int floor, int slot, int entryHour) {
+            this.vehicle = vehicle;
+            this.floor = floor;
+            this.slot = slot;
+            this.entryHour = entryHour;
+        }
+    }
+
+    // Manages the parking facility
+    static class ParkingFacility {
+        // Five floors with unequal capacities
+        private final int[] floorCapacities = {10, 15, 12, 20, 8};
+
+        // true means the slot is occupied
+        private final boolean[][] occupied = new boolean[5][];
+
+        // Active tickets indexed by vehicle registration number
+        private final Map<String, ParkingTicket> activeTickets =
+                new HashMap<>();
+
+        ParkingFacility() {
+            for (int floor = 0; floor < floorCapacities.length; floor++) {
+                occupied[floor] = new boolean[floorCapacities[floor]];
+            }
+        }
+
+        // Park a vehicle in the first available slot
+        public void parkVehicle(Vehicle vehicle, int entryHour) {
+            String regNo = vehicle.getRegistrationNumber();
+
+            if (activeTickets.containsKey(regNo)) {
+                System.out.println(regNo + " is already parked.");
+                return;
+            }
+
+            for (int floor = 0; floor < occupied.length; floor++) {
+                for (int slot = 0; slot < occupied[floor].length; slot++) {
+                    if (!occupied[floor][slot]) {
+                        occupied[floor][slot] = true;
+
+                        ParkingTicket ticket =
+                                new ParkingTicket(vehicle, floor + 1,
+                                        slot + 1, entryHour);
+
+                        activeTickets.put(regNo, ticket);
+
+                        System.out.println(regNo + " parked at Floor "
+                                + (floor + 1) + ", Slot " + (slot + 1));
+                        return;
+                    }
+                }
+            }
+
+            System.out.println("Parking is full. Cannot park " + regNo);
+        }
+
+        // Remove vehicle and calculate its fee
+        public void exitVehicle(String regNo, int parkingHours) {
+            ParkingTicket ticket = activeTickets.get(regNo);
+
+            if (ticket == null) {
+                System.out.println("No active parking ticket for " + regNo);
+                return;
+            }
+
+            // Treat zero or negative duration as zero hours
+            if (parkingHours < 0) {
+                parkingHours = 0;
+            }
+
+            double fee = ticket.vehicle.calculateFee(
+                    parkingHours, ticket.entryHour);
+
+            occupied[ticket.floor - 1][ticket.slot - 1] = false;
+            activeTickets.remove(regNo);
+
+            System.out.println(regNo + " exited from Floor "
+                    + ticket.floor + ", Slot " + ticket.slot);
+            System.out.println("Parking fee: Rs. " + fee);
+        }
+
+        // Display available slots on each floor
+        public void displayAvailability() {
+            System.out.println("\nParking availability:");
+
+            for (int floor = 0; floor < occupied.length; floor++) {
+                int available = 0;
+
+                for (boolean slotOccupied : occupied[floor]) {
+                    if (!slotOccupied) {
+                        available++;
+                    }
+                }
+
+                System.out.println("Floor " + (floor + 1) + ": "
+                        + available + " slots available out of "
+                        + floorCapacities[floor]);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        ParkingFacility parking = new ParkingFacility();
+
+        System.out.println("=== Campus Smart-Parking System ===");
+
+        // Vehicles enter
+        parking.parkVehicle(new EBike("EB101"), 10);
+        parking.parkVehicle(new DeliveryVan("DV202"), 10);
+        parking.parkVehicle(new Car("CAR303"), 8);
+        parking.parkVehicle(new Visitor("VIS404"), 11);
+
+        parking.displayAvailability();
+
+        System.out.println("\n=== Vehicle Exit ===");
+
+        // E-bike: flat ₹20
+        parking.exitVehicle("EB101", 1);
+
+        // Delivery van: 2 hours × ₹60 = ₹120 (entered during 9 AM–5 PM)
+        parking.exitVehicle("DV202", 2);
+
+        // Car: 2 hours × ₹30 = ₹60
+        parking.exitVehicle("CAR303", 2);
+
+        // Visitor: one-day pass = ₹100
+        parking.exitVehicle("VIS404", 5);
+
+        System.out.println("\nAll sample vehicles have exited.");
+        parking.displayAvailability();
+    }
+}
